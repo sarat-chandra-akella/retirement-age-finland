@@ -1,243 +1,201 @@
 import streamlit as st
 import time
-from utils import (
-    check_password,
-    check_if_interview_completed,
-    save_interview_data,
-)
-import os
+import uuid
+
+from utils import finalize_interview_to_dropbox, transcribe_audio
 import config
+
 
 # =========================
 # TIME LIMIT CONFIGURATION
 # =========================
-MAX_INTERVIEW_SECONDS = 7 * 60  # 7 minutes hard limit
+MAX_INTERVIEW_SECONDS = 7 * 60  # 7 minutes
 
+# =========================
 # Load API library
+# =========================
 if "gpt" in config.MODEL.lower():
-    api = "openai"
     from openai import OpenAI
-
+    api = "openai"
 elif "claude" in config.MODEL.lower():
-    api = "anthropic"
     import anthropic
+    api = "anthropic"
 else:
-    raise ValueError(
-        "Model does not contain 'gpt' or 'claude'; unable to determine API."
-    )
+    raise ValueError("Unsupported model")
 
-# Set page title and icon
-st.set_page_config(page_title="Interview", page_icon=config.AVATAR_INTERVIEWER)
+# =========================
+# Page config
+# =========================
+st.set_page_config(
+    page_title="Haastattelu",
+    page_icon=config.AVATAR_INTERVIEWER,
+)
 
-# Check if usernames and logins are enabled
+# =========================
+# Login handling
+# =========================
 if config.LOGINS:
     pwd_correct, username = check_password()
     if not pwd_correct:
         st.stop()
-    else:
-        st.session_state.username = username
+    st.session_state.username = username
 else:
-    st.session_state.username = "testaccount"
+    st.session_state.username = "QID"
 
-# Create directories if they do not already exist
-for directory in [
-    config.TRANSCRIPTS_DIRECTORY,
-    config.TIMES_DIRECTORY,
-    config.BACKUPS_DIRECTORY,
-]:
-    os.makedirs(directory, exist_ok=True)
+# =========================
+# START INTERVIEW GATE
+# =========================
+if "started" not in st.session_state:
+    st.session_state.started = False
 
-# Initialise session state
-if "interview_active" not in st.session_state:
-    st.session_state.interview_active = True
+if not st.session_state.started:
+    if st.button("Aloita haastattelu"):
+        st.session_state.started = True
+    else:
+        st.stop()
 
+# =========================
+# Session state init
+# =========================
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+if "interview_active" not in st.session_state:
+    st.session_state.interview_active = True
+
 if "start_time" not in st.session_state:
     st.session_state.start_time = time.time()
-    st.session_state.start_time_file_names = time.strftime(
-        "%Y_%m_%d_%H_%M_%S", time.localtime(st.session_state.start_time)
-    )
 
-# Check if interview previously completed
-interview_previously_completed = check_if_interview_completed(
-    config.TIMES_DIRECTORY, st.session_state.username
-)
-
-if interview_previously_completed and not st.session_state.messages:
-    st.session_state.interview_active = False
-    st.markdown("Interview already completed.")
-
-# Quit button
-col1, col2 = st.columns([0.85, 0.15])
-with col2:
-    if st.session_state.interview_active and st.button("Quit"):
-        st.session_state.interview_active = False
-        st.session_state.messages.append(
-            {"role": "assistant", "content": "You have cancelled the interview."}
-        )
-        save_interview_data(
-            st.session_state.username,
-            config.TRANSCRIPTS_DIRECTORY,
-            config.TIMES_DIRECTORY,
-        )
-        st.stop()
-
-# Display previous messages
-for message in st.session_state.messages[1:]:
-    avatar = (
-        config.AVATAR_INTERVIEWER
-        if message["role"] == "assistant"
-        else config.AVATAR_RESPONDENT
-    )
-    if not any(code in message["content"] for code in config.CLOSING_MESSAGES):
-        with st.chat_message(message["role"], avatar=avatar):
-            st.markdown(message["content"])
-
+# =========================
 # Load API client
+# =========================
 if api == "openai":
     client = OpenAI(api_key=st.secrets["API_KEY_OPENAI"])
-    api_kwargs = {"stream": True}
 else:
     client = anthropic.Anthropic(api_key=st.secrets["API_KEY_ANTHROPIC"])
-    api_kwargs = {"system": config.SYSTEM_PROMPT}
 
-api_kwargs.update(
-    {
-        "messages": st.session_state.messages,
-        "model": config.MODEL,
-        "max_tokens": config.MAX_OUTPUT_TOKENS,
-    }
-)
-if config.TEMPERATURE is not None:
-    api_kwargs["temperature"] = config.TEMPERATURE
-
+# =========================
 # First interviewer message
+# =========================
 if not st.session_state.messages:
-    if api == "openai":
-        st.session_state.messages.append(
-            {"role": "system", "content": config.SYSTEM_PROMPT}
-        )
-        with st.chat_message("assistant", avatar=config.AVATAR_INTERVIEWER):
-            stream = client.chat.completions.create(**api_kwargs)
-            message_interviewer = st.write_stream(stream)
-    else:
-        st.session_state.messages.append({"role": "user", "content": "Hi"})
-        with st.chat_message("assistant", avatar=config.AVATAR_INTERVIEWER):
-            placeholder = st.empty()
-            message_interviewer = ""
-            with client.messages.stream(**api_kwargs) as stream:
-                for delta in stream.text_stream:
-                    if delta:
-                        message_interviewer += delta
-                        placeholder.markdown(message_interviewer + "▌")
-            placeholder.markdown(message_interviewer)
-
+    # 1. Add system prompt (NO images inside this)
     st.session_state.messages.append(
-        {"role": "assistant", "content": message_interviewer}
+        {"role": "system", "content": config.SYSTEM_PROMPT}
     )
 
-    save_interview_data(
-        username=st.session_state.username,
-        transcripts_directory=config.BACKUPS_DIRECTORY,
-        times_directory=config.BACKUPS_DIRECTORY,
-        file_name_addition_transcript=f"_transcript_started_{st.session_state.start_time_file_names}",
-        file_name_addition_time=f"_time_started_{st.session_state.start_time_file_names}",
+    # 2. Manually create first message (UI content, not sent to model)
+    first_message = """
+Hei, kiitos osallistumisesta kyselyyn! Ennen kuin aloitamme, kopioi ja liitä Qualtrics-tunnuksesi alla olevaan kenttään.
+
+Haastattelun aikana voit joko nauhoittaa tai kirjoittaa vastauksesi. Nopeamman vastaamisen vuoksi suosittelemme nauhoittamista.
+
+Klikkaa tätä painiketta tallentaaksesi:
+
+Kun olet valmis, klikkaa tätä painiketta lähettääksesi vastauksesi:
+
+Huom: tallennamme vain tekstimuotoiset transkriptiot. Vastaukset ovat anonyymejä.
+"""
+
+    # 3. Add to chat history as assistant message
+    st.session_state.messages.append(
+        {"role": "assistant", "content": first_message}
     )
+
+# =========================
+# Display transcript (single source of truth)
+# =========================
+for m in st.session_state.messages[1:]:
+    avatar = (
+        config.AVATAR_INTERVIEWER
+        if m["role"] == "assistant"
+        else config.AVATAR_RESPONDENT
+    )
+    with st.chat_message(m["role"], avatar=avatar):
+        st.markdown(m["content"], unsafe_allow_html=True)
 
 # =========================
 # MAIN CHAT LOOP
 # =========================
 if st.session_state.interview_active:
 
-    elapsed_time = time.time() - st.session_state.start_time
-    time_exceeded = elapsed_time >= MAX_INTERVIEW_SECONDS
+    elapsed = time.time() - st.session_state.start_time
+    time_exceeded = elapsed >= MAX_INTERVIEW_SECONDS
 
-    if message_respondent := st.chat_input("Your message here"):
-        st.session_state.messages.append(
-            {"role": "user", "content": message_respondent}
+    if "audio_key" not in st.session_state:
+        st.session_state.audio_key = 0
+
+    # Input always at the bottom
+    with st.container():
+        audio = st.audio_input(
+            "Tallenna vastauksesi",
+            key=f"audio_{st.session_state.audio_key}"
         )
-        with st.chat_message("user", avatar=config.AVATAR_RESPONDENT):
-            st.markdown(message_respondent)
+        text_fallback = st.chat_input("Tai kirjoita vastauksesi")
 
-        # FORCE PART III IF TIME EXCEEDED
+    user_msg = None
+
+    if audio is not None:
+        with st.spinner("Litterointi käynnissä..."):
+            user_msg = transcribe_audio(audio.getvalue())
+
+        st.markdown("**Litteroitu vastauksesi:**")
+        st.markdown(user_msg)
+
+    if user_msg is None:
+        user_msg = text_fallback
+
+    if user_msg:
+        # =========================
+        # Create interview_id from FIRST response
+        # =========================
+        if "interview_id" not in st.session_state:
+            st.session_state.interview_id = f"{user_msg}_{uuid.uuid4().hex}"
+
+        st.session_state.messages.append(
+            {"role": "user", "content": user_msg}
+        )
+
+        with st.chat_message("user", avatar=config.AVATAR_RESPONDENT):
+            st.markdown(user_msg)
+
         if time_exceeded:
-            st.session_state.messages.append(
-                {
-                    "role": "system",
-                    "content": (
-                        "The allotted interview time has elapsed. "
-                        "Immediately proceed to PART III of the interview: "
-                        "write a careful summary of the respondent’s views, "
-                        "then ask the final evaluation question exactly as specified, "
-                        "and then end the interview."
-                    ),
-                }
+            finalize_interview_to_dropbox(
+                interview_id=st.session_state.interview_id,
+                messages=st.session_state.messages,
+                system_prompt=config.SYSTEM_PROMPT,
+                start_time=st.session_state.start_time,
             )
+            st.session_state.interview_active = False
+            st.markdown("Haastattelu on päättynyt aikarajan vuoksi. Kiitos!")
+            st.stop()
+
+        response = client.chat.completions.create(
+            model=config.MODEL,
+            messages=st.session_state.messages,
+            max_tokens=config.MAX_OUTPUT_TOKENS,
+        )
+        assistant_text_raw = response.choices[0].message.content
+        assistant_text = assistant_text_raw.replace("x7y8", "").replace("TIME_EXCEEDED", "").strip()
+        st.session_state.messages.append(
+            {"role": "assistant", "content": assistant_text}
+        )
 
         with st.chat_message("assistant", avatar=config.AVATAR_INTERVIEWER):
-            placeholder = st.empty()
-            message_interviewer = ""
+            st.markdown(assistant_text, unsafe_allow_html=True)
 
-            if api == "openai":
-                stream = client.chat.completions.create(**api_kwargs)
-                for chunk in stream:
-                    delta = chunk.choices[0].delta.content
-                    if delta:
-                        message_interviewer += delta
-                        if len(message_interviewer) > 5:
-                            placeholder.markdown(message_interviewer + "▌")
-                    if any(code in message_interviewer for code in config.CLOSING_MESSAGES):
-                        placeholder.empty()
-                        break
-            else:
-                with client.messages.stream(**api_kwargs) as stream:
-                    for delta in stream.text_stream:
-                        if delta:
-                            message_interviewer += delta
-                            if len(message_interviewer) > 5:
-                                placeholder.markdown(message_interviewer + "▌")
-                        if any(code in message_interviewer for code in config.CLOSING_MESSAGES):
-                            placeholder.empty()
-                            break
-
-            # Handle closing codes
-            for code, closing_text in config.CLOSING_MESSAGES.items():
-                if code in message_interviewer:
-                    st.session_state.messages.append(
-                        {"role": "assistant", "content": message_interviewer}
-                    )
-                    st.session_state.interview_active = False
-                    st.markdown(closing_text)
-                    st.session_state.messages.append(
-                        {"role": "assistant", "content": closing_text}
-                    )
-
-                    while not check_if_interview_completed(
-                        config.TRANSCRIPTS_DIRECTORY, st.session_state.username
-                    ):
-                        save_interview_data(
-                            st.session_state.username,
-                            config.TRANSCRIPTS_DIRECTORY,
-                            config.TIMES_DIRECTORY,
-                        )
-                        time.sleep(0.1)
-                    st.stop()
-
-            # Normal message
-            placeholder.markdown(message_interviewer)
-            st.session_state.messages.append(
-                {"role": "assistant", "content": message_interviewer}
+        # =========================
+        # END INTERVIEW IF CODE FOUND
+        # =========================
+        if "x7y8" in assistant_text_raw:
+            finalize_interview_to_dropbox(
+                interview_id=st.session_state.interview_id,
+                messages=st.session_state.messages,
+                system_prompt=config.SYSTEM_PROMPT,
+                start_time=st.session_state.start_time,
             )
+            st.session_state.interview_active = False
+            st.markdown(config.CLOSING_MESSAGES["x7y8"])
+            st.stop()
 
-            try:
-                save_interview_data(
-                    username=st.session_state.username,
-                    transcripts_directory=config.BACKUPS_DIRECTORY,
-                    times_directory=config.BACKUPS_DIRECTORY,
-                    file_name_addition_transcript=f"_transcript_started_{st.session_state.start_time_file_names}",
-                    file_name_addition_time=f"_time_started_{st.session_state.start_time_file_names}",
-                )
-            except:
-                pass
+        st.session_state.audio_key += 1
+        st.rerun()
