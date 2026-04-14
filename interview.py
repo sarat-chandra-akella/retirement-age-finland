@@ -90,8 +90,10 @@ Hei, kiitos osallistumisesta kyselyyn! Ennen kuin aloitamme, kopioi ja liitä Qu
 Haastattelun aikana voit joko nauhoittaa tai kirjoittaa vastauksesi. Nopeamman vastaamisen vuoksi suosittelemme nauhoittamista.
 
 Klikkaa tätä painiketta tallentaaksesi:
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAATCAYAAACgADyUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFESURBVDhP1ZTdS8JQGMafiZEXaTMlm5mzbNo/EFIQ9adLN0JZF1pQWuBH0MpgsbWGH9tp52Wato3ArvqNw/uc5+zZYezdEd71T4YliHjVh64bNMII3PH+roV2+5G0ohRRPiiRnse342DwNgtxuObeT3xBTdM89U2QF/qOv/Hfgo3GDer1azJiqzGq80y9+uUVms1b0hQcj8dQn18wHA6Rl3eQSm3QIodr7lmWBVV9xWQyIZ+CkrRFk3brgerRcQXlskKDa07LW8tmJaqzoCiuo9Pp0Q2O40Ap7dOwbZs6qd97QjqdQiazScFZy41GI9RqFzDc/hQiAuLxNTCHwTRN90EMyaSISuUQ0ZXoYpDDGEO320PX3dkwPshLJOLYK+4il9um+ZTQ36paPYfgXqdnJ56zyN++YxCFggy5kPdmfpY8AYAvP+KLLm+c9U4AAAAASUVORK5CYII=" width="30">
 
 Kun olet valmis, klikkaa tätä painiketta lähettääksesi vastauksesi:
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZklEQVR4nGNgoBAw4pK4w8DwH5mvgkMthiC6RnSAbhATKZqxqWHCJUGsISzYFEh+/YpV43NubgwxJlJtR3cFEyGFhMAgMQBXIsEHYHqwxgK20MbrAlJdgayWCZcEMZoZGKiQmSgGAAYRFhubxjHdAAAAAElFTkSuQmCC" width="30">
 
 Huom: tallennamme vain tekstimuotoiset transkriptiot. Vastaukset ovat anonyymejä.
 """
