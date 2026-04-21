@@ -5,11 +5,10 @@ import uuid
 from utils import finalize_interview_to_dropbox, transcribe_audio
 import config
 
-
 # =========================
 # TIME LIMIT CONFIGURATION
 # =========================
-MAX_INTERVIEW_SECONDS = 7 * 60  # 7 minutes
+MAX_INTERVIEW_SECONDS = 8 * 60  # 8 minutes
 
 # =========================
 # Load API library
@@ -66,6 +65,9 @@ if "interview_active" not in st.session_state:
 if "start_time" not in st.session_state:
     st.session_state.start_time = time.time()
 
+if "in_part_v" not in st.session_state:
+    st.session_state.in_part_v = False
+
 # =========================
 # Load API client
 # =========================
@@ -78,33 +80,29 @@ else:
 # First interviewer message
 # =========================
 if not st.session_state.messages:
-    # 1. Add system prompt (NO images inside this)
     st.session_state.messages.append(
         {"role": "system", "content": config.SYSTEM_PROMPT}
     )
 
-    # 2. Manually create first message (UI content, not sent to model)
-    first_message = """
-Hei, kiitos osallistumisesta kyselyyn! Ennen kuin aloitamme, kopioi ja liitä Qualtrics-tunnuksesi alla olevaan kenttään.
+    first_message = """Hei, kiitos osallistumisestasi tähän haastatteluun! Haastattelun aikana voit vastata joko **nauhoittamalla ääntä tai kirjoittamalla vastauksesi**. Nopeamman vastaamisen vuoksi suosittelemme äänen tallentamista.
 
-Haastattelun aikana voit joko nauhoittaa tai kirjoittaa vastauksesi. Nopeamman vastaamisen vuoksi suosittelemme nauhoittamista.
-
-Klikkaa tätä painiketta tallentaaksesi:
-<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAATCAYAAACgADyUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFESURBVDhP1ZTdS8JQGMafiZEXaTMlm5mzbNo/EFIQ9adLN0JZF1pQWuBH0MpgsbWGH9tp52Wato3ArvqNw/uc5+zZYezdEd71T4YliHjVh64bNMII3PH+roV2+5G0ohRRPiiRnse342DwNgtxuObeT3xBTdM89U2QF/qOv/Hfgo3GDer1azJiqzGq80y9+uUVms1b0hQcj8dQn18wHA6Rl3eQSm3QIodr7lmWBVV9xWQyIZ+CkrRFk3brgerRcQXlskKDa07LW8tmJaqzoCiuo9Pp0Q2O40Ap7dOwbZs6qd97QjqdQiazScFZy41GI9RqFzDc/hQiAuLxNTCHwTRN90EMyaSISuUQ0ZXoYpDDGEO320PX3dkwPshLJOLYK+4il9um+ZTQ36paPYfgXqdnJ56zyN++YxCFggy5kPdmfpY8AYAvP+KLLm+c9U4AAAAASUVORK5CYII=" width="30">
+Klikkaa tätä painiketta aloittaaksesi vastauksen nauhoittamisen:
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAATCAYAAACgADyUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFESURBVDhP1ZTdS8JQGMafiZEXaTMlm5mzbNo/EFIQ9adLN0JZF1pQWuBH0MpgsbWGH9tp52Wato3ArvqNw/uc5+zZYezdEd71T4YliHjVh64bNMII3PH+roV2+5G0ohRRPiiRnse342DwNgtxuObeT3xBTdM89U2QF/qOv/Hfgo3GDer1azJiqzGq80y9+uUVms1b0hQcj8dQn18wHA6Rl3eQSm3QIodr7lmWBVV9xWQyIZ+CkrRFk3brgerRcQXlskKDa07LW8tmJaqzoCiuo9Pp0Q2O40Ap7dOwbZs6qd97QjqdQiazScFZy41GI9RqFzDc/hQiAuLxNTCHwTRN90EMyaSISuUQ0ZXoYpDDGEO320PX3dkwPshLJOLYK+4il9um+ZTQ36paPYfgXqdnJ56zyN++YxCFggy5kPdmfpY8AYAvP+KLLm+c9U4AAAAASUVORK5CYII=" width="20">
 
 Kun olet valmis, klikkaa tätä painiketta lähettääksesi vastauksesi:
-<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZklEQVR4nGNgoBAw4pK4w8DwH5mvgkMthiC6RnSAbhATKZqxqWHCJUGsISzYFEh+/YpV43NubgwxJlJtR3cFEyGFhMAgMQBXIsEHYHqwxgK20MbrAlJdgayWCZcEMZoZGKiQmSgGAAYRFhubxjHdAAAAAElFTkSuQmCC" width="30">
+<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZklEQVR4nGNgoBAw4pK4w8DwH5mvgkMthiC6RnSAbhATKZqxqWHCJUGsISzYFEh+/YpV43NubgwxJlJtR3cFEyGFhMAgMQBXIsEHYHqwxgK20MbrAlJdgayWCZcEMZoZGKiQmSgGAAYRFhubxjHdAAAAAElFTkSuQmCC" width="20">
 
-Huom: tallennamme vain tekstimuotoiset transkriptiot. Vastaukset ovat anonyymejä.
+Huomaa, että tallennamme vain tämän keskustelun tekstimuotoiset litteroinnit. Vastaamisesi on anonyymi, koska se liitetään vain tunnisteeseen, jonka annat nyt.
+
+**Aloittaaksesi kirjoita Qualtricsista saamasi 7-numeroinen Chat ID alla olevaan kenttään.**
+
 """
-
-    # 3. Add to chat history as assistant message
     st.session_state.messages.append(
         {"role": "assistant", "content": first_message}
     )
 
 # =========================
-# Display transcript (single source of truth)
+# Display transcript
 # =========================
 for m in st.session_state.messages[1:]:
     avatar = (
@@ -123,72 +121,52 @@ if st.session_state.interview_active:
     elapsed = time.time() - st.session_state.start_time
     time_exceeded = elapsed >= MAX_INTERVIEW_SECONDS
 
-    if "audio_key" not in st.session_state:
-        st.session_state.audio_key = 0
-
-    # Input always at the bottom
     with st.container():
-        audio = st.audio_input(
-            "Tallenna vastauksesi",
-            key=f"audio_{st.session_state.audio_key}"
-        )
-        text_fallback = st.chat_input("Tai kirjoita vastauksesi")
+        user_msg = st.chat_input("Tai kirjoita vastauksesi")
 
-    user_msg = None
-
-    if audio is not None:
-        with st.spinner("Litterointi käynnissä..."):
-            user_msg = transcribe_audio(audio.getvalue())
-
-        st.markdown("**Litteroitu vastauksesi:**")
-        st.markdown(user_msg)
-
-    if user_msg is None:
-        user_msg = text_fallback
+    if time_exceeded and not st.session_state.in_part_v:
+        st.session_state.messages.append({
+            "role": "system",
+            "content": "Haastatteluun varattu aika on päättynyt. Sinun tulee nyt siirtyä suoraan osaan V ja noudattaa näitä ohjeita täsmällisesti."
+        })
+        st.session_state.in_part_v = True
 
     if user_msg:
-        # =========================
-        # Create interview_id from FIRST response
-        # =========================
         if "interview_id" not in st.session_state:
             st.session_state.interview_id = f"{user_msg}_{uuid.uuid4().hex}"
 
-        st.session_state.messages.append(
-            {"role": "user", "content": user_msg}
-        )
+        st.session_state.messages.append({"role": "user", "content": user_msg})
 
         with st.chat_message("user", avatar=config.AVATAR_RESPONDENT):
             st.markdown(user_msg)
-
-        if time_exceeded:
-            finalize_interview_to_dropbox(
-                interview_id=st.session_state.interview_id,
-                messages=st.session_state.messages,
-                system_prompt=config.SYSTEM_PROMPT,
-                start_time=st.session_state.start_time,
-            )
-            st.session_state.interview_active = False
-            st.markdown("Haastattelu on päättynyt aikarajan vuoksi. Kiitos!")
-            st.stop()
 
         response = client.chat.completions.create(
             model=config.MODEL,
             messages=st.session_state.messages,
             max_tokens=config.MAX_OUTPUT_TOKENS,
         )
+
         assistant_text_raw = response.choices[0].message.content
-        assistant_text = assistant_text_raw.replace("x7y8", "").replace("TIME_EXCEEDED", "").strip()
-        st.session_state.messages.append(
-            {"role": "assistant", "content": assistant_text}
-        )
 
-        with st.chat_message("assistant", avatar=config.AVATAR_INTERVIEWER):
-            st.markdown(assistant_text, unsafe_allow_html=True)
-
-        # =========================
-        # END INTERVIEW IF CODE FOUND
-        # =========================
         if "x7y8" in assistant_text_raw:
+            st.session_state.messages.append({"role": "assistant", "content": "x7y8"})
+        if "26mn" in assistant_text_raw:
+            st.session_state.messages.append({"role": "assistant", "content": "26mn"})
+        if "5j3k" in assistant_text_raw:
+            st.session_state.messages.append({"role": "assistant", "content": "5j3k"})
+        if "ab41" in assistant_text_raw:
+            st.session_state.messages.append({"role": "assistant", "content": "ab41"})
+
+        assistant_text = assistant_text_raw.replace("x7y8", "").replace("5j3k", "").replace("26mn", "").replace("ab41", "").strip()
+
+        if assistant_text:
+            st.session_state.messages.append({"role": "assistant", "content": assistant_text})
+
+            with st.chat_message("assistant", avatar=config.AVATAR_INTERVIEWER):
+                st.markdown(assistant_text, unsafe_allow_html=True)
+
+        if "x7y8" in assistant_text_raw:
+            st.session_state.messages.append({"role": "assistant", "content": config.CLOSING_MESSAGES["x7y8"]})
             finalize_interview_to_dropbox(
                 interview_id=st.session_state.interview_id,
                 messages=st.session_state.messages,
@@ -199,5 +177,40 @@ if st.session_state.interview_active:
             st.markdown(config.CLOSING_MESSAGES["x7y8"])
             st.stop()
 
-        st.session_state.audio_key += 1
+        if "5j3k" in assistant_text_raw:
+            st.session_state.messages.append({"role": "assistant", "content": config.CLOSING_MESSAGES["5j3k"]})
+            finalize_interview_to_dropbox(
+                interview_id=st.session_state.interview_id,
+                messages=st.session_state.messages,
+                system_prompt=config.SYSTEM_PROMPT,
+                start_time=st.session_state.start_time,
+            )
+            st.session_state.interview_active = False
+            st.markdown(config.CLOSING_MESSAGES["5j3k"])
+            st.stop()
+
+        if "ab41" in assistant_text_raw:
+            st.session_state.messages.append({"role": "assistant", "content": config.CLOSING_MESSAGES["ab41"]})
+            finalize_interview_to_dropbox(
+                interview_id=st.session_state.interview_id,
+                messages=st.session_state.messages,
+                system_prompt=config.SYSTEM_PROMPT,
+                start_time=st.session_state.start_time,
+            )
+            st.session_state.interview_active = False
+            st.markdown(config.CLOSING_MESSAGES["ab41"])
+            st.stop()
+
+        if "26mn" in assistant_text_raw:
+            st.session_state.messages.append({"role": "assistant", "content": config.CLOSING_MESSAGES["26mn"]})
+            finalize_interview_to_dropbox(
+                interview_id=st.session_state.interview_id,
+                messages=st.session_state.messages,
+                system_prompt=config.SYSTEM_PROMPT,
+                start_time=st.session_state.start_time,
+            )
+            st.session_state.interview_active = False
+            st.markdown(config.CLOSING_MESSAGES["26mn"])
+            st.stop()
+
         st.rerun()
