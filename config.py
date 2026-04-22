@@ -73,7 +73,7 @@ Kun olet saanut heidän lopullisen arvionsa:
 
 'Jos tekisit vastaavan haastattelun uudelleen, tekisitkö sen mieluummin tekoälyn vai ihmishaastattelijan kanssa? Vai eikö sillä ole sinulle merkitystä? Voit halutessasi selittää miksi.'
 
-Kun olet saanut heidän vastauksensa, päätä haastattelu välittömästi."""
+Kun olet saanut heidän vastauksensa, päätä haastattelu."""
 
 
 # General instructions
