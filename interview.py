@@ -84,15 +84,9 @@ if not st.session_state.messages:
         {"role": "system", "content": config.SYSTEM_PROMPT}
     )
 
-    first_message = """Hei, kiitos osallistumisestasi tähän haastatteluun! Haastattelun aikana voit vastata joko **nauhoittamalla ääntä tai kirjoittamalla vastauksesi**. Nopeamman vastaamisen vuoksi suosittelemme äänen tallentamista.
+    first_message = """Hei, kiitos osallistumisestasi tähän haastatteluun!
 
-Klikkaa tätä painiketta aloittaaksesi vastauksen nauhoittamisen:
-<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAATCAYAAACgADyUAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAFESURBVDhP1ZTdS8JQGMafiZEXaTMlm5mzbNo/EFIQ9adLN0JZF1pQWuBH0MpgsbWGH9tp52Wato3ArvqNw/uc5+zZYezdEd71T4YliHjVh64bNMII3PH+roV2+5G0ohRRPiiRnse342DwNgtxuObeT3xBTdM89U2QF/qOv/Hfgo3GDer1azJiqzGq80y9+uUVms1b0hQcj8dQn18wHA6Rl3eQSm3QIodr7lmWBVV9xWQyIZ+CkrRFk3brgerRcQXlskKDa07LW8tmJaqzoCiuo9Pp0Q2O40Ap7dOwbZs6qd97QjqdQiazScFZy41GI9RqFzDc/hQiAuLxNTCHwTRN90EMyaSISuUQ0ZXoYpDDGEO320PX3dkwPshLJOLYK+4il9um+ZTQ36paPYfgXqdnJ56zyN++YxCFggy5kPdmfpY8AYAvP+KLLm+c9U4AAAAASUVORK5CYII=" width="20">
-
-Kun olet valmis, klikkaa tätä painiketta lähettääksesi vastauksesi:
-<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZklEQVR4nGNgoBAw4pK4w8DwH5mvgkMthiC6RnSAbhATKZqxqWHCJUGsISzYFEh+/YpV43NubgwxJlJtR3cFEyGFhMAgMQBXIsEHYHqwxgK20MbrAlJdgayWCZcEMZoZGKiQmSgGAAYRFhubxjHdAAAAAElFTkSuQmCC" width="20">
-
-Huomaa, että tallennamme vain tämän keskustelun tekstimuotoiset litteroinnit. Vastaamisesi on anonyymi, koska se liitetään vain tunnisteeseen, jonka annat nyt.
+Huomaa, että tämä keskustelu pysyy anonyyminä, koska vastauksesi liitetään vain tunnisteeseen, jonka annat nyt.
 
 **Aloittaaksesi kirjoita Qualtricsista saamasi 7-numeroinen Chat ID alla olevaan kenttään.**
 
@@ -122,7 +116,7 @@ if st.session_state.interview_active:
     time_exceeded = elapsed >= MAX_INTERVIEW_SECONDS
 
     with st.container():
-        user_msg = st.chat_input("Tai kirjoita vastauksesi")
+        user_msg = st.chat_input("Kirjoita vastauksesi")
 
     if time_exceeded and not st.session_state.in_part_v:
         st.session_state.messages.append({
@@ -213,4 +207,5 @@ if st.session_state.interview_active:
             st.markdown(config.CLOSING_MESSAGES["26mn"])
             st.stop()
 
+        st.session_state.audio_key += 1
         st.rerun()
