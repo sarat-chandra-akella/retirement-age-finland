@@ -130,7 +130,7 @@ if st.session_state.interview_active:
             "role": "system",
             "content": "Haastatteluun varattu aika on päättynyt. Sinun tulee nyt siirtyä suoraan osaan V ja noudattaa näitä ohjeita täsmällisesti."
         })
-    st.session_state.in_part_v = True
+        st.session_state.in_part_v = True
 
     # =========================
     # NORMAL + PART V FLOW
