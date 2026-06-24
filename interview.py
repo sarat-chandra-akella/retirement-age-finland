@@ -3,12 +3,13 @@ import time
 import uuid
 
 from utils import finalize_interview_to_dropbox, _get_dbx, ensure_interview_folder, save_transcript
+import logging
 import config
 
 # =========================
 # TIME LIMIT CONFIGURATION
 # =========================
-MAX_INTERVIEW_SECONDS = 7 * 60  # 7 minutes
+MAX_INTERVIEW_SECONDS = 9 * 60  # 9 minutes
 
 # =========================
 # Load API library
@@ -128,7 +129,7 @@ if st.session_state.interview_active:
     if time_exceeded and not st.session_state.in_part_v:
         st.session_state.messages.append({
             "role": "system",
-            "content": "Haastatteluun varattu aika on päättynyt. Sinun tulee nyt siirtyä suoraan osaan V ja noudattaa näitä ohjeita täsmällisesti."
+            "content": "Haastatteluaika on päättynyt. Siirry nyt suoraan haastattelun viimeiseen osaan."
         })
         st.session_state.in_part_v = True
 
@@ -152,9 +153,12 @@ if st.session_state.interview_active:
                 messages=st.session_state.messages,
                 max_tokens=config.MAX_OUTPUT_TOKENS, # max_completion_tokens=config.MAX_OUTPUT_TOKENS,
             )        
-        except Exception as e:
-            st.error(f"OpenAI error: {e}")
-            raise
+        except Exception:
+            logging.exception("API error")
+            st.error("Tapahtui tekninen ongelma. Päivitä sivu ja yritä uudelleen tai ota yhteyttä tutkimusryhmään.") #st.error(f"OpenAI error: {e}")
+            st.stop() #raise
+
+        logging.info("finish_reason=%s", response.choices[0].finish_reason)
 
         assistant_text_raw = response.choices[0].message.content
 
@@ -209,7 +213,7 @@ if st.session_state.interview_active:
         # =========================
         assistant_text_raw = assistant_text_raw.strip()
 
-        if assistant_text_raw == "x7y8":
+        if "x7y8" in assistant_text_raw:
             st.session_state.messages.append(
                 {"role": "assistant", "content": config.CLOSING_MESSAGES["x7y8"]}
             )
@@ -225,7 +229,7 @@ if st.session_state.interview_active:
 
         assistant_text_raw = assistant_text_raw.strip()
 
-        if assistant_text_raw == "5j3k":
+        if "5j3k" in assistant_text_raw:
             st.session_state.messages.append(
                 {"role": "assistant", "content": config.CLOSING_MESSAGES["5j3k"]}
             )
@@ -241,7 +245,7 @@ if st.session_state.interview_active:
 
         assistant_text_raw = assistant_text_raw.strip()
 
-        if assistant_text_raw == "ab41":
+        if "ab41" in assistant_text_raw:
             st.session_state.messages.append(
                 {"role": "assistant", "content": config.CLOSING_MESSAGES["ab41"]}
             )
@@ -257,7 +261,7 @@ if st.session_state.interview_active:
 
         assistant_text_raw = assistant_text_raw.strip()
 
-        if assistant_text_raw == "26mn":
+        if "26mn" in assistant_text_raw:
             st.session_state.messages.append(
                 {"role": "assistant", "content": config.CLOSING_MESSAGES["26mn"]}
             )
