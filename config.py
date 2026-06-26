@@ -130,10 +130,10 @@ CLOSING_MESSAGES["ab41"] = (
 "Tämä oli viimeinen kysymys. Kiitos vastauksistasi ja osallistumisestasi tähän tutkimukseen! Viimeistele kysely syöttämällä tämä 6-numeroinen koodi Qualtricsiin: 630821"
 )
 CLOSING_MESSAGES["5j3k"] = (
-"Kiitos osallistumisesta tähän tutkimukseen, haastattelu päättyy tähän."
+"Tämä oli viimeinen kysymys. Kiitos vastauksistasi ja osallistumisestasi tähän tutkimukseen! Viimeistele kysely syöttämällä tämä 6-numeroinen koodi Qualtricsiin: 111111"
 )
 CLOSING_MESSAGES["26mn"] = (
-"Kiitos osallistumisesta tähän tutkimukseen, haastattelu päättyy tähän."
+"Tämä oli viimeinen kysymys. Kiitos vastauksistasi ja osallistumisestasi tähän tutkimukseen! Viimeistele kysely syöttämällä tämä 6-numeroinen koodi Qualtricsiin: 999999"
 )
 CLOSING_MESSAGES["x7y8"] = (
 "Tämä oli viimeinen kysymys. Kiitos vastauksistasi ja osallistumisestasi tähän tutkimukseen! Viimeistele kysely syöttämällä tämä 6-numeroinen koodi Qualtricsiin: 128036"
