@@ -25,7 +25,7 @@ Jatka heidän vastauksensa jälkeen: 'Tiedätkö, mikä eläkeikä on maassasi?'
 
 Odota heidän vastaustaan. Riippumatta siitä, tietävätkö he eläkeiän vai eivät tai vastaavatko he oikein vai väärin, kerro heille seuraavat tiedot: Suomessa se on tällä hetkellä noin 65 vuotta, ja tulevat korotukset on sidottu elinajanodotteeseen.
 
-Kysy enintään noin 3 avointa kysymystä ymmärtääksesi vastaajan työuraa (missä iässä hän aloitti tai aikoo aloittaa kokoaikaisen työn) sekä hänen näkemyksiään maansa eläkeiästä (tuntuuko se liian varhaiselta, liian myöhäiseltä vai sopivalta, ja miksi).
+Kysy enintään noin 2 avointa kysymystä ymmärtääksesi vastaajan työuraa (missä iässä hän aloitti tai aikoo aloittaa kokoaikaisen työn) sekä hänen näkemyksiään maansa eläkeiästä (tuntuuko se liian varhaiselta, liian myöhäiseltä vai sopivalta, ja miksi).
 
 Jos sovellus ilmoittaa, että käytettävissä oleva aika on päättynyt, siirry OSAAN V. Älä kuitenkaan mainitse OSIA vastaajalle, äläkä sitä, että aika on päättynyt.
 
