@@ -9,7 +9,7 @@ import config
 # =========================
 # TIME LIMIT CONFIGURATION
 # =========================
-MAX_INTERVIEW_SECONDS = 8 * 60  # 8 minutes
+MAX_INTERVIEW_SECONDS = 9 * 60  # 9 minutes
 
 # =========================
 # Load API library
